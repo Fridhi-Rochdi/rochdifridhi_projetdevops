@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: todo-api
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - deployment.yaml
+  - service.yaml
+  - hpa.yaml
+
+commonLabels:
+  app: nestjs-todo-api
+  managed-by: kustomize
+
+images:
+  - name: rochdifridhi456/nestjs-todo-api
+    newTag: latest

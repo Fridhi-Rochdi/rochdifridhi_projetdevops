@@ -109,19 +109,110 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## Kubernetes Deployment
+
+### Prerequisites
+- Kubernetes cluster (minikube, Docker Desktop, or cloud provider)
+- kubectl installed and configured
+
+### Deploy to Kubernetes
+
+```bash
+# Apply all manifests
+kubectl apply -f k8s/
+
+# Or use Kustomize
+kubectl apply -k k8s/
+
+# Check deployment status
+kubectl get all -n todo-api
+
+# Check pods
+kubectl get pods -n todo-api
+
+# View logs
+kubectl logs -n todo-api -l app=nestjs-todo-api --tail=50 -f
+```
+
+### Access the Application
+
+```bash
+# Port forward to access locally
+kubectl port-forward -n todo-api service/todo-api-service 3000:3000
+
+# Then access at http://localhost:3000
+```
+
+### Kubernetes Resources
+
+- **Namespace**: `todo-api` - Isolated environment
+- **Deployment**: 2 replicas with rolling updates
+- **Service**: ClusterIP on port 3000
+- **ConfigMap**: Environment variables
+- **HPA**: Auto-scales between 2-5 pods based on CPU/memory
+
+### Health Checks
+
+- **Liveness Probe**: `/health` - Restarts unhealthy pods
+- **Readiness Probe**: `/health` - Controls traffic routing
+- **Startup Probe**: `/health` - Handles slow container starts
+
+### Resource Limits
+
+- **Requests**: 100m CPU, 128Mi memory
+- **Limits**: 500m CPU, 512Mi memory
+
+### Scaling
+
+```bash
+# Manual scaling
+kubectl scale deployment todo-api -n todo-api --replicas=3
+
+# Check HPA status
+kubectl get hpa -n todo-api
+
+# Watch autoscaling
+kubectl get hpa -n todo-api -w
+```
+
+### Cleanup
+
+```bash
+# Delete all resources
+kubectl delete -f k8s/
+
+# Or delete namespace (removes everything)
+kubectl delete namespace todo-api
+```
+
+See [k8s/COMMANDS.md](k8s/COMMANDS.md) for more Kubernetes commands.
+
 ## Project Structure
 
 ```
 src/
-├── todo/               # Todo module
+├── common/            # Shared modules
+│   ├── logger/        # Custom logger service
+│   └── middleware/    # Request ID middleware
+├── todo/              # Todo module
 │   ├── dto/           # Data Transfer Objects
 │   ├── entities/      # Todo entity
 │   ├── todo.controller.ts
 │   ├── todo.service.ts
 │   └── todo.module.ts
 ├── health/            # Health check controller
+├── metrics/           # Prometheus metrics module
 ├── app.module.ts      # Root module
 └── main.ts            # Application entry point
+
+k8s/
+├── namespace.yaml     # Kubernetes namespace
+├── configmap.yaml     # Environment configuration
+├── deployment.yaml    # Application deployment
+├── service.yaml       # Service definition
+├── hpa.yaml           # Horizontal Pod Autoscaler
+├── kustomization.yaml # Kustomize configuration
+└── COMMANDS.md        # Kubernetes commands reference
 ```
 
 ## Technical Stack
@@ -134,7 +225,8 @@ src/
 - **Registry**: Docker Hub
 - **CI/CD**: GitHub Actions
 - **Security**: CodeQL, Trivy, npm audit
-- **Orchestration**: Docker Compose / Kubernetes (planned)
+- **Orchestration**: Kubernetes (minikube)
+- **Observability**: Structured logging, Prometheus metrics, Request tracing
 
 ## DevOps Features
 
@@ -142,6 +234,12 @@ src/
 - ✅ Docker containerization
 - ✅ CI/CD with GitHub Actions
 - ✅ Automated Docker builds and pushes
+- ✅ Security scanning (SAST, dependency, container)
+- ✅ Structured logging with Pino
+- ✅ Prometheus metrics endpoint
+- ✅ Request correlation IDs
+- ✅ Kubernetes deployment with auto-scaling
+- 🔄 Monitoring stack (Prometheus/Grafana) (planned)
 - ✅ Security scanning (SAST with CodeQL)
 - ✅ Dependency vulnerability scanning (npm audit)
 - ✅ Container image scanning (Trivy)
