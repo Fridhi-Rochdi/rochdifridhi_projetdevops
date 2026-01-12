@@ -37,7 +37,8 @@ This is a simple Todo REST API built with [NestJS](https://github.com/nestjs/nes
 ## API Endpoints
 
 - `GET /` - Welcome message
-- `GET /health` - Health check endpoint
+- `GET /health` - Health check endpoint (with memory metrics)
+- `GET /metrics` - Prometheus metrics endpoint
 - `POST /todos` - Create a new todo
 - `GET /todos` - Get all todos
 - `GET /todos/:id` - Get a todo by ID
@@ -144,8 +145,8 @@ src/
 - ✅ Security scanning (SAST with CodeQL)
 - ✅ Dependency vulnerability scanning (npm audit)
 - ✅ Container image scanning (Trivy)
+- ✅ Observability (structured logging, metrics, tracing)
 - 🔄 Kubernetes deployment (planned)
-- 🔄 Observability stack (planned)
 
 ## Security
 
@@ -173,6 +174,85 @@ This project implements multiple layers of security scanning:
 2. Check "Code scanning alerts" for CodeQL findings
 3. Check "Dependabot alerts" for dependency issues
 4. Review Trivy results in workflow logs
+
+## Observability
+
+This project implements comprehensive observability with the three pillars: **Logs**, **Metrics**, and **Traces**.
+
+### Structured Logging
+
+- **Format**: JSON with structured fields
+- **Library**: nestjs-pino + pino-pretty
+- **Fields**: timestamp, level, context, requestId, message
+- **Transport**: Pretty-printed in development, JSON in production
+
+**Example log output:**
+```
+[2026-01-12 21:00:00] INFO (TodoController): Creating todo: Buy groceries | requestId: abc123
+[2026-01-12 21:00:01] INFO (TodoService): Todo created with ID: xyz789
+```
+
+**Log Levels:**
+- `error` - Errors and exceptions
+- `warn` - Warnings and potential issues
+- `log` - General application info
+- `debug` - Detailed debug information
+
+### Metrics (Prometheus)
+
+Access metrics at: `http://localhost:3000/metrics`
+
+**Default Metrics:**
+- `process_cpu_user_seconds_total` - CPU usage
+- `process_resident_memory_bytes` - Memory usage
+- `nodejs_heap_size_total_bytes` - Heap size
+- `nodejs_heap_size_used_bytes` - Heap used
+- `process_uptime_seconds` - Process uptime
+
+**HTTP Metrics** (automatically collected):
+- `http_requests_total` - Total HTTP requests by method, route, status
+- `http_request_duration_seconds` - Request duration histogram
+
+**Example Prometheus query:**
+```promql
+# Request rate
+rate(http_requests_total[5m])
+
+# 95th percentile latency
+histogram_quantile(0.95, http_request_duration_seconds_bucket)
+```
+
+### Request Tracing
+
+- **Correlation ID**: X-Request-ID header
+- **Auto-generated**: UUID v4 if not provided
+- **Propagation**: Included in all log entries
+- **Response header**: X-Request-ID echoed back
+
+**Example:**
+```bash
+# Send request with custom ID
+curl -H "X-Request-ID: my-trace-123" http://localhost:3000/todos
+
+# Check logs - all entries will include requestId: my-trace-123
+```
+
+### Monitoring Stack Integration
+
+The metrics endpoint is compatible with:
+- **Prometheus** - Time-series metrics collection
+- **Grafana** - Metrics visualization
+- **Loki** - Log aggregation (JSON logs)
+- **Jaeger/Tempo** - Distributed tracing (future enhancement)
+
+**Example Prometheus scrape config:**
+```yaml
+scrape_configs:
+  - job_name: 'nestjs-todo-api'
+    static_configs:
+      - targets: ['localhost:3000']
+    metrics_path: '/metrics'
+```
 
 ## Resources
 
