@@ -10,11 +10,17 @@
   <a href="https://github.com/Fridhi-Rochdi/rochdifridhi_projetdevops/actions/workflows/ci-cd.yml">
     <img src="https://github.com/Fridhi-Rochdi/rochdifridhi_projetdevops/actions/workflows/ci-cd.yml/badge.svg" alt="CI/CD Pipeline">
   </a>
+  <a href="https://github.com/Fridhi-Rochdi/rochdifridhi_projetdevops/actions/workflows/codeql.yml">
+    <img src="https://github.com/Fridhi-Rochdi/rochdifridhi_projetdevops/actions/workflows/codeql.yml/badge.svg" alt="CodeQL">
+  </a>
   <a href="https://hub.docker.com/r/rochdifridhi456/nestjs-todo-api">
     <img src="https://img.shields.io/docker/v/rochdifridhi456/nestjs-todo-api?label=docker" alt="Docker Image">
   </a>
   <a href="https://hub.docker.com/r/rochdifridhi456/nestjs-todo-api">
     <img src="https://img.shields.io/docker/pulls/rochdifridhi456/nestjs-todo-api" alt="Docker Pulls">
+  </a>
+  <a href="https://github.com/Fridhi-Rochdi/rochdifridhi_projetdevops/security">
+    <img src="https://img.shields.io/badge/security-scanning-brightgreen" alt="Security Scanning">
   </a>
 </p>
 
@@ -126,6 +132,7 @@ src/
 - **Container**: Docker
 - **Registry**: Docker Hub
 - **CI/CD**: GitHub Actions
+- **Security**: CodeQL, Trivy, npm audit
 - **Orchestration**: Docker Compose / Kubernetes (planned)
 
 ## DevOps Features
@@ -134,9 +141,38 @@ src/
 - ✅ Docker containerization
 - ✅ CI/CD with GitHub Actions
 - ✅ Automated Docker builds and pushes
-- 🔄 Security scanning (SAST/DAST) (planned)
+- ✅ Security scanning (SAST with CodeQL)
+- ✅ Dependency vulnerability scanning (npm audit)
+- ✅ Container image scanning (Trivy)
 - 🔄 Kubernetes deployment (planned)
 - 🔄 Observability stack (planned)
+
+## Security
+
+This project implements multiple layers of security scanning:
+
+### SAST (Static Application Security Testing)
+- **CodeQL**: Automated code scanning for security vulnerabilities
+- Runs on every push and PR
+- Weekly scheduled scans
+- Detects: SQL injection, XSS, command injection, path traversal, etc.
+
+### Dependency Scanning
+- **npm audit**: Checks for vulnerable dependencies
+- Runs in CI/CD pipeline
+- Identifies packages with known CVEs
+
+### Container Security
+- **Trivy**: Scans both filesystem and Docker images
+- Detects OS and application vulnerabilities
+- Scans for CRITICAL and HIGH severity issues
+- Results uploaded to GitHub Security tab
+
+### How to View Security Results
+1. Go to [Security tab](https://github.com/Fridhi-Rochdi/rochdifridhi_projetdevops/security)
+2. Check "Code scanning alerts" for CodeQL findings
+3. Check "Dependabot alerts" for dependency issues
+4. Review Trivy results in workflow logs
 
 ## Resources
 
