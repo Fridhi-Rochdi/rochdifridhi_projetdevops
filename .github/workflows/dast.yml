@@ -31,22 +31,37 @@ jobs:
 
       - name: Start application in background
         run: |
-          nohup npm run start:prod > app.log 2>&1 &
-          echo $! > app.pid
+          npm run start:prod > app.log 2>&1 &
+          APP_PID=$!
+          echo $APP_PID > app.pid
+          echo "Started application with PID: $APP_PID"
 
       - name: Wait for application to start
         run: |
           echo "Waiting for application to be ready..."
-          for i in {1..30}; do
-            if curl -f http://localhost:3000/health > /dev/null 2>&1; then
-              echo "Application is ready!"
+          attempt=0
+          max_attempts=30
+          
+          while [ $attempt -lt $max_attempts ]; do
+            attempt=$((attempt + 1))
+            
+            if curl -f http://localhost:3000/health 2>/dev/null; then
+              echo "✓ Application is ready after $attempt attempts!"
+              curl http://localhost:3000/health
               exit 0
             fi
-            echo "Attempt $i/30: Application not ready yet..."
-            sleep 2
+            
+            echo "Attempt $attempt/$max_attempts: Application not ready yet..."
+            sleep 3
           done
-          echo "Application failed to start"
+          
+          echo "✗ Application failed to start after $max_attempts attempts"
+          echo "=== Application Logs ==="
           cat app.log
+          echo "=== Process Status ==="
+          if [ -f app.pid ]; then
+            ps -p $(cat app.pid) || echo "Process not running"
+          fi
           exit 1
 
       - name: Run OWASP ZAP Baseline Scan
@@ -54,7 +69,7 @@ jobs:
         with:
           target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a -j -m 5 -T 5'
+          cmd_options: '-a -j'
           issue_title: 'DAST Security Vulnerabilities Found'
           token: ${{ secrets.GITHUB_TOKEN }}
           fail_action: false
