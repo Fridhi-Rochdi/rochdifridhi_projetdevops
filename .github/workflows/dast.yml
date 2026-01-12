@@ -29,12 +29,29 @@ jobs:
       - name: Build application
         run: npm run build
 
+      - name: Verify build output
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "Build failed - dist directory not found"
+            exit 1
+          fi
+          echo "Build successful - dist directory exists"
+          ls -la dist/
+
       - name: Start application in background
         run: |
-          npm run start:prod > app.log 2>&1 &
+          NODE_ENV=production npm run start:prod > app.log 2>&1 &
           APP_PID=$!
           echo $APP_PID > app.pid
           echo "Started application with PID: $APP_PID"
+          sleep 5
+          
+          # Check if process is still running
+          if ! kill -0 $APP_PID 2>/dev/null; then
+            echo "Application crashed immediately!"
+            cat app.log
+            exit 1
+          fi
 
       - name: Wait for application to start
         run: |

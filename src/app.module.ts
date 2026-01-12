@@ -10,30 +10,49 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 @Module({
   imports: [
     LoggerModule.forRoot({
-      pinoHttp: {
-        transport: {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            singleLine: true,
-            translateTime: 'SYS:standard',
-            ignore: 'pid,hostname',
-          },
-        },
-        customProps: (req) => ({
-          requestId: req.headers['x-request-id'],
-        }),
-        serializers: {
-          req: (req) => ({
-            method: req.method,
-            url: req.url,
-            requestId: req.headers['x-request-id'],
-          }),
-          res: (res) => ({
-            statusCode: res.statusCode,
-          }),
-        },
-      },
+      pinoHttp:
+        process.env.NODE_ENV === 'production'
+          ? {
+              // Production: JSON logs (no pino-pretty)
+              customProps: (req) => ({
+                requestId: req.headers['x-request-id'],
+              }),
+              serializers: {
+                req: (req) => ({
+                  method: req.method,
+                  url: req.url,
+                  requestId: req.headers['x-request-id'],
+                }),
+                res: (res) => ({
+                  statusCode: res.statusCode,
+                }),
+              },
+            }
+          : {
+              // Development: Pretty logs
+              transport: {
+                target: 'pino-pretty',
+                options: {
+                  colorize: true,
+                  singleLine: true,
+                  translateTime: 'SYS:standard',
+                  ignore: 'pid,hostname',
+                },
+              },
+              customProps: (req) => ({
+                requestId: req.headers['x-request-id'],
+              }),
+              serializers: {
+                req: (req) => ({
+                  method: req.method,
+                  url: req.url,
+                  requestId: req.headers['x-request-id'],
+                }),
+                res: (res) => ({
+                  statusCode: res.statusCode,
+                }),
+              },
+            },
     }),
     TodoModule,
     MetricsModule,
