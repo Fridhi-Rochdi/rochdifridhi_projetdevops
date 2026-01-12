@@ -1,0 +1,64 @@
+# OWASP ZAP Scan Rules Configuration
+# This file configures which security rules to apply during the DAST scan
+# Format: ID	THRESHOLD	[ATTACK_STRENGTH]
+# 
+# THRESHOLD values:
+# - IGNORE: Rule is disabled
+# - INFO: For information only
+# - LOW: Low severity issues
+# - MEDIUM: Medium severity issues
+# - HIGH: High severity issues
+#
+# ATTACK_STRENGTH values (optional):
+# - LOW, MEDIUM, HIGH, INSANE
+
+# Cross-Site Scripting (XSS)
+40012	MEDIUM
+
+# SQL Injection
+40018	MEDIUM
+
+# Path Traversal
+6	MEDIUM
+
+# Remote File Inclusion
+7	MEDIUM
+
+# Server Side Include
+40009	MEDIUM
+
+# Remote OS Command Injection
+90020	MEDIUM
+
+# External Redirect
+20019	MEDIUM
+
+# CRLF Injection
+40003	LOW
+
+# Parameter Tampering
+40008	LOW
+
+# Application Error Disclosure
+90022	LOW
+
+# Cookie No HttpOnly Flag
+10010	LOW
+
+# Cookie Without Secure Flag
+10011	LOW
+
+# Cross-Domain Misconfiguration
+10098	MEDIUM
+
+# Content Security Policy (CSP) Header Not Set
+10038	INFO
+
+# X-Frame-Options Header Not Set
+10020	INFO
+
+# X-Content-Type-Options Header Missing
+10021	INFO
+
+# Strict-Transport-Security Header Not Set
+10035	INFO

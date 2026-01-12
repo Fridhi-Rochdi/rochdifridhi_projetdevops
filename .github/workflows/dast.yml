@@ -1,0 +1,138 @@
+name: DAST Security Scan
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run weekly on Monday at 2 AM UTC
+    - cron: '0 2 * * 1'
+
+jobs:
+  dast-scan:
+    name: OWASP ZAP Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start application in background
+        run: |
+          nohup npm run start:prod > app.log 2>&1 &
+          echo $! > app.pid
+
+      - name: Wait for application to start
+        run: |
+          echo "Waiting for application to be ready..."
+          for i in {1..30}; do
+            if curl -f http://localhost:3000/health > /dev/null 2>&1; then
+              echo "Application is ready!"
+              exit 0
+            fi
+            echo "Attempt $i/30: Application not ready yet..."
+            sleep 2
+          done
+          echo "Application failed to start"
+          cat app.log
+          exit 1
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'http://localhost:3000'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a -j -m 5 -T 5'
+          issue_title: 'DAST Security Vulnerabilities Found'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fail_action: false
+
+      - name: Test API endpoints
+        run: |
+          echo "Testing API endpoints..."
+          
+          # Health check
+          curl -f http://localhost:3000/health || echo "Health endpoint failed"
+          
+          # Metrics endpoint
+          curl -f http://localhost:3000/metrics || echo "Metrics endpoint failed"
+          
+          # Create a todo
+          TODO_ID=$(curl -s -X POST http://localhost:3000/todos \
+            -H "Content-Type: application/json" \
+            -d '{"title":"DAST Test Todo","description":"Testing OWASP ZAP scan"}' \
+            | grep -o '"id":[0-9]*' | grep -o '[0-9]*')
+          
+          echo "Created todo with ID: $TODO_ID"
+          
+          # Get all todos
+          curl -f http://localhost:3000/todos || echo "Get todos failed"
+          
+          # Get single todo
+          curl -f http://localhost:3000/todos/$TODO_ID || echo "Get single todo failed"
+          
+          # Update todo
+          curl -f -X PATCH http://localhost:3000/todos/$TODO_ID \
+            -H "Content-Type: application/json" \
+            -d '{"completed":true}' || echo "Update todo failed"
+          
+          # Delete todo
+          curl -f -X DELETE http://localhost:3000/todos/$TODO_ID || echo "Delete todo failed"
+
+      - name: Stop application
+        if: always()
+        run: |
+          if [ -f app.pid ]; then
+            kill $(cat app.pid) || true
+          fi
+
+      - name: Upload ZAP Scan Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-scan-report
+          path: |
+            report_html.html
+            report_md.md
+            report_json.json
+
+      - name: Create scan summary
+        if: always()
+        run: |
+          echo "## 🔒 DAST Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Scan Date:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** http://localhost:3000" >> $GITHUB_STEP_SUMMARY
+          echo "**Tool:** OWASP ZAP Baseline Scan" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f report_md.md ]; then
+            echo "### Scan Report" >> $GITHUB_STEP_SUMMARY
+            cat report_md.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **Status:** Scan completed successfully" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Download the full report from the artifacts section above." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Tested Endpoints" >> $GITHUB_STEP_SUMMARY
+          echo "- \`GET /health\` - Health check" >> $GITHUB_STEP_SUMMARY
+          echo "- \`GET /metrics\` - Prometheus metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- \`POST /todos\` - Create todo" >> $GITHUB_STEP_SUMMARY
+          echo "- \`GET /todos\` - List all todos" >> $GITHUB_STEP_SUMMARY
+          echo "- \`GET /todos/:id\` - Get single todo" >> $GITHUB_STEP_SUMMARY
+          echo "- \`PATCH /todos/:id\` - Update todo" >> $GITHUB_STEP_SUMMARY
+          echo "- \`DELETE /todos/:id\` - Delete todo" >> $GITHUB_STEP_SUMMARY

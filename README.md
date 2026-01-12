@@ -13,6 +13,9 @@
   <a href="https://github.com/Fridhi-Rochdi/rochdifridhi_projetdevops/actions/workflows/codeql.yml">
     <img src="https://github.com/Fridhi-Rochdi/rochdifridhi_projetdevops/actions/workflows/codeql.yml/badge.svg" alt="CodeQL">
   </a>
+  <a href="https://github.com/Fridhi-Rochdi/rochdifridhi_projetdevops/actions/workflows/dast.yml">
+    <img src="https://github.com/Fridhi-Rochdi/rochdifridhi_projetdevops/actions/workflows/dast.yml/badge.svg" alt="DAST Security Scan">
+  </a>
   <a href="https://hub.docker.com/r/rochdifridhi456/nestjs-todo-api">
     <img src="https://img.shields.io/docker/v/rochdifridhi456/nestjs-todo-api?label=docker" alt="Docker Image">
   </a>
@@ -255,6 +258,28 @@ This project implements multiple layers of security scanning:
 - Runs on every push and PR
 - Weekly scheduled scans
 - Detects: SQL injection, XSS, command injection, path traversal, etc.
+
+### DAST (Dynamic Application Security Testing)
+- **OWASP ZAP**: Runtime security scanning of deployed API
+- Scans all API endpoints in running application
+- Baseline scan for common vulnerabilities
+- Manual trigger + weekly scheduled scans
+- Reports uploaded as workflow artifacts
+
+**Run DAST scan manually:**
+1. Go to [Actions tab](https://github.com/Fridhi-Rochdi/rochdifridhi_projetdevops/actions/workflows/dast.yml)
+2. Click "Run workflow"
+3. Wait for scan completion
+4. Download HTML/JSON report from artifacts
+
+**Tested endpoints:**
+- `GET /health` - Health check
+- `GET /metrics` - Prometheus metrics
+- `POST /todos` - Create todo
+- `GET /todos` - List todos
+- `GET /todos/:id` - Get single todo
+- `PATCH /todos/:id` - Update todo
+- `DELETE /todos/:id` - Delete todo
 
 ### Dependency Scanning
 - **npm audit**: Checks for vulnerable dependencies
