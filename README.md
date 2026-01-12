@@ -6,6 +6,18 @@
 
 <p align="center">A NestJS REST API for managing todo items with complete DevOps lifecycle implementation.</p>
 
+<p align="center">
+  <a href="https://github.com/Fridhi-Rochdi/rochdifridhi_projetdevops/actions/workflows/ci-cd.yml">
+    <img src="https://github.com/Fridhi-Rochdi/rochdifridhi_projetdevops/actions/workflows/ci-cd.yml/badge.svg" alt="CI/CD Pipeline">
+  </a>
+  <a href="https://hub.docker.com/r/rochdifridhi456/nestjs-todo-api">
+    <img src="https://img.shields.io/docker/v/rochdifridhi456/nestjs-todo-api?label=docker" alt="Docker Image">
+  </a>
+  <a href="https://hub.docker.com/r/rochdifridhi456/nestjs-todo-api">
+    <img src="https://img.shields.io/docker/pulls/rochdifridhi456/nestjs-todo-api" alt="Docker Pulls">
+  </a>
+</p>
+
 ## Description
 
 This is a simple Todo REST API built with [NestJS](https://github.com/nestjs/nest) framework, designed as an academic DevOps project. The API demonstrates:
@@ -64,6 +76,10 @@ $ docker-compose up -d
 
 # Stop containers
 $ docker-compose down
+
+# Pull from Docker Hub
+$ docker pull rochdifridhi456/nestjs-todo-api:latest
+$ docker run -p 3000:3000 rochdifridhi456/nestjs-todo-api:latest
 ```
 
 ### Docker image details
@@ -71,6 +87,7 @@ $ docker-compose down
 - Non-root user for security
 - Health check configured
 - Base image: node:18-alpine
+- Available on Docker Hub: `rochdifridhi456/nestjs-todo-api`
 
 ## Run tests
 
@@ -107,13 +124,16 @@ src/
 - **Runtime**: Node.js 18+
 - **Validation**: class-validator
 - **Container**: Docker
+- **Registry**: Docker Hub
+- **CI/CD**: GitHub Actions
 - **Orchestration**: Docker Compose / Kubernetes (planned)
 
 ## DevOps Features
 
 - ✅ Git workflow with GitHub Issues
 - ✅ Docker containerization
-- 🔄 CI/CD with GitHub Actions (planned)
+- ✅ CI/CD with GitHub Actions
+- ✅ Automated Docker builds and pushes
 - 🔄 Security scanning (SAST/DAST) (planned)
 - 🔄 Kubernetes deployment (planned)
 - 🔄 Observability stack (planned)
