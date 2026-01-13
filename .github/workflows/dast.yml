@@ -73,13 +73,18 @@ jobs:
           exit 1
 
       - name: Run OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
-        with:
-          target: 'http://localhost:3000'
-          rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a -j'
-          fail_action: false
-          allow_issue_writing: false
+        run: |
+          docker pull ghcr.io/zaproxy/zaproxy:stable
+          docker run -v ${{ github.workspace }}:/zap/wrk/:rw \
+            --network=host \
+            -t ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t http://localhost:3000 \
+            -r zap-report.html \
+            -J zap-report.json \
+            -w zap-report.md \
+            -c .zap/rules.tsv \
+            -a
         continue-on-error: true
 
       - name: Upload ZAP Scan Report
@@ -88,9 +93,9 @@ jobs:
         with:
           name: zap-security-report
           path: |
-            report_html.html
-            report_md.md
-            report_json.json
+            zap-report.html
+            zap-report.md
+            zap-report.json
           retention-days: 30
 
       - name: Test API endpoints
@@ -132,17 +137,6 @@ jobs:
             kill $(cat app.pid) || true
           fi
 
-      - name: Upload ZAP Scan Report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: zap-security-report
-          path: |
-            report_html.html
-            report_md.md
-            report_json.json
-          retention-days: 30
-
       - name: Create scan summary
         if: always()
         run: |
@@ -153,9 +147,9 @@ jobs:
           echo "**Tool:** OWASP ZAP Baseline Scan" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          if [ -f report_md.md ]; then
+          if [ -f zap-report.md ]; then
             echo "### 📊 Scan Summary" >> $GITHUB_STEP_SUMMARY
-            cat report_md.md >> $GITHUB_STEP_SUMMARY
+            cat zap-report.md >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
           
